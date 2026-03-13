@@ -1,35 +1,48 @@
-# IL2CPP Mod Base (C++)
+# IL2CPP Offset Dumper (C++ CLI)
 
-A minimal DLL scaffold for starting Unity IL2CPP mods.
+A Windows-friendly command-line `.exe` utility for dumping IL2CPP metadata details from:
 
-## What this base gives you
+- `global-metadata.dat`
+- `GameAssembly.dll`
 
-- `DllMain` entrypoint that spins work onto a separate thread.
-- Basic runtime resolution of common IL2CPP exports from `GameAssembly.dll`:
-  - `il2cpp_domain_get`
-  - `il2cpp_thread_attach`
-  - `il2cpp_string_new`
-- Helper functions to attach your mod thread to the IL2CPP domain and create managed strings.
+## Features
 
-## Project layout
-
-- `include/il2cpp_base.hpp`: Public API surface for initialization + helpers.
-- `src/il2cpp_base.cpp`: IL2CPP export resolution and wrappers.
-- `src/dllmain.cpp`: DLL entry point and mod thread bootstrap.
+- Drag-and-drop friendly console input mode.
+- Reads IL2CPP metadata type + method definitions.
+- Dumps method list with namespace, class, method, token, and best-effort RVA match.
+- Parses `GameAssembly.dll` export table and appends export RVAs.
+- Writes output to `il2cpp_dump.csv` in the current directory.
 
 ## Build
-
-This scaffold targets Windows game modding workflows.
 
 ```bash
 cmake -S . -B build
 cmake --build build --config Release
 ```
 
-Then inject/load the built DLL with your preferred loader.
+Output binary (Windows): `build/Release/il2cpp_offset_dumper.exe`
 
-## Next steps
+## Usage
 
-1. Add your preferred hooking library (for example, MinHook).
-2. Add metadata/class/method resolution (direct IL2CPP APIs or a resolver library).
-3. Install hooks inside `mod_entry()` and keep cleanup in `DLL_PROCESS_DETACH`.
+### Interactive drag-and-drop mode
+
+```bash
+il2cpp_offset_dumper.exe
+```
+
+Then drag/drop:
+1. `global-metadata.dat`
+2. `GameAssembly.dll`
+
+### Argument mode
+
+```bash
+il2cpp_offset_dumper.exe "C:\path\to\global-metadata.dat" "C:\path\to\GameAssembly.dll"
+```
+
+## Output format
+
+- Main CSV section: methods from metadata (`Namespace,Class,Method,Token,RVA`)
+- Secondary CSV section: exported symbols from `GameAssembly.dll`
+
+> Note: many IL2CPP games do not expose all managed method symbols in the export table. Those methods will show `RVA = N/A` unless a symbol-based match is found.
